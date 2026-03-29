@@ -7,6 +7,7 @@
   --text-main: #f8fafc;
   --text-dim: #94a3b8;
   --text-code: #38bdf8;
+  --question-color: #fbbf24;
   
   --accent-blue: #3b82f6;
   --accent-purple: #8b5cf6;
@@ -22,14 +23,12 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-main);
   overflow: hidden;
-  /* subtle blueprint grid */
   background-image: 
     linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
-/* App container */
 .app-container {
   display: flex;
   height: 100vh;
@@ -56,14 +55,12 @@ body {
   perspective: 1200px;
 }
 
-/* Office Environment */
 .office-floor {
   position: absolute;
   top: 5%;
   left: 5%;
   width: 90%;
   height: 90%;
-  /* Isometric-ish tilt */
   transform: rotateX(25deg) rotateY(-5deg) rotateZ(2deg);
   transform-style: preserve-3d;
   background: var(--floor-color);
@@ -72,18 +69,13 @@ body {
     0 40px 100px rgba(0,0,0,0.8),
     inset 0 2px 5px rgba(255,255,255,0.1),
     0 0 0 1px rgba(255,255,255,0.05);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 16px;
-  padding: 16px;
 }
 
 .room {
   background: var(--room-bg);
   border: 1px solid rgba(255,255,255,0.05);
   border-radius: 12px;
-  position: relative;
+  position: absolute;
   transform-style: preserve-3d;
   box-shadow: inset 0 20px 50px rgba(0,0,0,0.5);
 }
@@ -121,33 +113,17 @@ body {
   line-height: 1.4;
 }
 
-.room-status {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  font-size: 11px;
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
-  padding: 4px 8px;
-  border-radius: 20px;
-  font-weight: 600;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-/* Agent Characters */
 .agent-node {
   position: absolute;
   transform-style: preserve-3d;
-  /* Prevent characters from tilting with the floor too much to keep them readable */
   transform: rotateX(-25deg) rotateY(5deg) rotateZ(-2deg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 140px;
-  margin-left: -70px; /* center horizontally based on position */
+  width: 180px;
+  margin-left: -90px;
 }
 
-/* "Minecraft" Style Tiny Bot */
 .bot-body {
   width: 40px;
   height: 48px;
@@ -182,55 +158,46 @@ body {
 .bot-hand.left { left: -8px; animation: typeLeft 0.5s infinite alternate; }
 .bot-hand.right { right: -8px; animation: typeRight 0.6s infinite alternate; }
 
-/* The deep script terminal */
-.terminal-cloud {
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--text-code);
-  width: 200px;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  position: relative;
-}
-
-.terminal-cloud::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 6px 6px 0;
-  border-style: solid;
-  border-color: rgba(56, 189, 248, 0.3) transparent transparent transparent;
-}
-
 .agent-name-plate {
-  margin-top: 8px;
-  background: rgba(15, 23, 42, 0.9);
-  padding: 4px 10px;
-  border-radius: 4px;
+  margin-top: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  padding: 8px 12px;
+  border-radius: 6px;
   border: 1px solid #334155;
   text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  width: 100%;
 }
 
 .agent-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .agent-role {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 4px;
 }
 
-/* Animations */
+.agent-current-task {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-code);
+  text-align: left;
+  line-height: 1.4;
+  min-height: 28px;
+}
+
 @keyframes blink {
   0%, 96%, 100% { transform: scaleY(1); }
   98% { transform: scaleY(0.1); }
@@ -246,29 +213,26 @@ body {
   100% { transform: translateY(1px); }
 }
 
-/* Data Flows */
 .flow-canvas {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
   pointer-events: none;
   z-index: 50;
-  /* Need to match office floor transform */
   transform: rotateX(-25deg) rotateY(5deg) rotateZ(-2deg);
 }
 
 .particle {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   background: #38bdf8;
   border-radius: 50%;
   box-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8;
   transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Control Panel */
 .bottom-panel {
-  height: 200px;
+  height: 250px;
   background: rgba(15, 23, 42, 0.95);
   border-top: 1px solid rgba(255,255,255,0.1);
   display: flex;
@@ -283,20 +247,32 @@ body {
   border-radius: 8px;
   border: 1px solid #334155;
   padding: 16px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Outfit', sans-serif;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .log-line {
-  font-size: 11px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.03);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border-left: 2px solid #334155;
 }
 
-.log-time { color: #64748b; margin-right: 8px; }
-.log-agent { color: #c084fc; font-weight: bold; margin-right: 8px; }
-.log-msg { color: #e2e8f0; }
+.log-line.question {
+  border-left-color: var(--question-color);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.log-time { color: #64748b; margin-right: 8px; font-size: 11px; }
+.log-agent { color: #c084fc; font-weight: 600; margin-right: 8px; }
+.log-msg { color: #e2e8f0; line-height: 1.4; }
+
+.log-line.question .log-agent { color: var(--question-color); }
+.log-line.question .log-msg { color: #fff; font-weight: 500; }
 
 .command-center {
   width: 400px;
