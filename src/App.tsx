@@ -1,343 +1,266 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Building2, 
-  Users, 
-  Settings, 
-  LayoutDashboard, 
-  Briefcase, 
-  CheckCircle2, 
-  Send,
-  MessageSquare,
-  Activity,
-  Globe,
-  Database,
-  Code2,
-  FileText,
-  Workflow,
-  Sparkles
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
 
-// --- MOCK DATA FOR THE DEMO ---
-
-const PROJECT = {
-  name: "Salesforce CPQ -> Salesforce RCA",
-  client: "Acme Corp Enterprise",
-  progress: 68,
-  status: "In Progress (Logic Translation)"
-};
-
+// MOCK DATA FOR THE DEMO
 const ROOMS = [
-  { id: 'boardroom', title: 'The War Room (Strategy & PM)', icon: <Briefcase size={16} /> },
-  { id: 'research', title: 'Research & Discovery', icon: <Globe size={16} /> },
-  { id: 'logic', title: 'Data Translation & Logic Lab', icon: <Workflow size={16} /> },
-  { id: 'engineering', title: 'Integration Engineering Floor', icon: <Code2 size={16} /> },
+  { id: 'boardroom', name: 'The War Room', goal: 'Strategy & Progress', x: 0, y: 0, w: '50%', h: '50%', color: '#8b5cf6' },
+  { id: 'research', name: 'Research Lab', goal: 'Docs & Best Practices', x: '50%', y: 0, w: '50%', h: '50%', color: '#3b82f6' },
+  { id: 'discovery', name: 'Discovery Zone', goal: 'Human Context (Slack/Heygen)', x: 0, y: '50%', w: '50%', h: '50%', color: '#ec4899' },
+  { id: 'engineering', name: 'Logic & Engineering Floor', goal: 'AST Translation & Code Generaton', x: '50%', y: '50%', w: '50%', h: '50%', color: '#10b981' },
 ];
 
-const AGENTS = [
+const INIT_AGENTS = [
   {
-    id: 'a1',
-    name: 'Ada',
-    role: 'Migration Architect (CEO)',
-    room: 'boardroom',
-    status: 'active',
-    task: 'Reviewing mapping architecture',
-    icon: <Sparkles size={20} style={{ color: '#c084fc' }} />
+    id: 'ada', name: 'Ada', role: 'Architect (CEO)', room: 'boardroom',
+    qx: '25%', qy: '25%', /* position inside the whole floor */
+    scripts: [
+      "Analyzing Salesforce Architecture...",
+      "Mapping CPQ logic to Target RCA schema.",
+      "> Waiting for context from Cyrus...",
+      "Received workflow delta.",
+      "Drafting Sprint 2 Milestone array."
+    ],
+    scriptIdx: 0,
+    charIdx: 0,
   },
   {
-    id: 'a2',
-    name: 'Atlas',
-    role: 'Project Manager',
-    room: 'boardroom',
-    status: 'idle',
-    task: 'Waiting for milestone completion',
-    icon: <LayoutDashboard size={20} style={{ color: '#9ca3af' }} />
+    id: 'rosie', name: 'Rosie', role: 'Research Agent', room: 'research',
+    qx: '75%', qy: '25%',
+    scripts: [
+      "Accessing legacy CPQ API references...",
+      "Scraping standard RCA Product Models...",
+      "Compiling difference matrix.",
+      "> Extracted 420 deprecation warnings.",
+      "Pushing dossier to Ada."
+    ],
+    scriptIdx: 0,
+    charIdx: 0,
   },
   {
-    id: 'a3',
-    name: 'Rosie',
-    role: 'Research Agent',
-    room: 'research',
-    status: 'active',
-    task: 'Scraping target RCA docs',
-    icon: <FileText size={20} style={{ color: '#60a5fa' }} />
+    id: 'cyrus', name: 'Cyrus', role: 'Context Gatherer', room: 'discovery',
+    qx: '25%', qy: '75%',
+    scripts: [
+      "Opening Slack thread with Billing Dept...",
+      "Pinging John (VP Sales).",
+      "Ask: 'Is manual discount applied pre-tax?'",
+      "> Waiting for user response...",
+      "Received: YES. Updating knowledge graph."
+    ],
+    scriptIdx: 0,
+    charIdx: 0,
   },
   {
-    id: 'a4',
-    name: 'Cyrus',
-    role: 'Context Gatherer',
-    room: 'research',
-    status: 'active',
-    task: 'Interviewing Billing Team (Slack)',
-    icon: <MessageSquare size={20} style={{ color: '#f472b6' }} />
+    id: 'nexus', name: 'Nexus', role: 'Logic Agent', room: 'engineering',
+    qx: '65%', qy: '65%',
+    scripts: [
+      "Fetching Price Rule #402...",
+      "Generating Abstract Syntax Tree.",
+      "Identifying boundary condition for discount.",
+      "Translating formula to RCA Engine Script.",
+      "Running local validation suite: PASS."
+    ],
+    scriptIdx: 0,
+    charIdx: 0,
   },
   {
-    id: 'a5',
-    name: 'Nexus',
-    role: 'Logic Agent',
-    room: 'logic',
-    status: 'very-active',
-    task: 'Translating Quote-to-Cash rule #402',
-    icon: <Database size={20} style={{ color: '#34d399' }} />
-  },
-  {
-    id: 'a6',
-    name: 'Spark',
-    role: 'Integration Engineer',
-    room: 'engineering',
-    status: 'active',
-    task: 'Writing Python ETL script',
-    icon: <Code2 size={20} style={{ color: '#fb923c' }} />
-  },
-  {
-    id: 'a7',
-    name: 'Quinn',
-    role: 'QA & Playbooks',
-    room: 'engineering',
-    status: 'idle',
-    task: 'Awaiting build sync',
-    icon: <CheckCircle2 size={20} style={{ color: '#9ca3af' }} />
+    id: 'spark', name: 'Spark', role: 'Integration Engineer', room: 'engineering',
+    qx: '85%', qy: '85%',
+    scripts: [
+      "Consuming Nexus translation logic...",
+      "Drafting Python ETL payload...",
+      "Opening target RCA API connection.",
+      "Injecting modified Quote Line data...",
+      "> Commit pushed. Milestone updated."
+    ],
+    scriptIdx: 0,
+    charIdx: 0,
   }
 ];
-
-const FEED = [
-  {
-    id: 1,
-    agent: 'Cyrus',
-    title: 'Context Gathered',
-    desc: 'Extracted manual discount approval workflow from John (VP Sales) on Slack.',
-    time: '2 mins ago',
-    icon: <MessageSquare size={16} color="#ec4899" />
-  },
-  {
-    id: 2,
-    agent: 'Nexus',
-    title: 'Logic Mapped',
-    desc: 'Successfully translated CPQ Price Rule #992 to new RCA Product Model.',
-    time: '14 mins ago',
-    icon: <Workflow size={16} color="#10b981" />
-  },
-  {
-    id: 3,
-    agent: 'Spark',
-    title: 'Code Committed',
-    desc: 'Pushed Python transformation layer for Opportunity Line Items.',
-    time: '45 mins ago',
-    icon: <Code2 size={16} color="#f59e0b" />
-  },
-  {
-    id: 4,
-    agent: 'Ada',
-    title: 'Milestone Approved',
-    desc: 'Approved Database Schema mapping phase. Moving to Logic translation.',
-    time: '1 hour ago',
-    icon: <CheckCircle2 size={16} color="#8b5cf6" />
-  }
-];
-
-// --- COMPONENTS ---
-
-const AgentBadge = ({ agent }: { agent: any }) => {
-  const isVeryActive = agent.status === 'very-active';
-  const isActive = agent.status !== 'idle';
-  
-  return (
-    <motion.div 
-      className="agent floating"
-      whileHover={{ scale: 1.05 }}
-      style={{ animationDelay: `${Math.random() * 2}s` }}
-    >
-      <div className={`avatar-ring ${isActive ? 'active' : ''}`} style={isVeryActive ? { animationDuration: '1s' } : {}}>
-        <div className="avatar-inner">
-          {agent.icon}
-        </div>
-        <div className={`status-dot ${isActive ? 'active' : ''}`} />
-      </div>
-      <div className="agent-info">
-        <h4 className="agent-name" style={{ color: isActive ? '#fff' : '#a1a1aa' }}>{agent.name}</h4>
-        <p className="agent-role">{agent.role}</p>
-        {isActive && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="agent-task"
-          >
-            {agent.task}
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
 
 export default function App() {
-  const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages] = useState<{sender: string, text: string, time: string, isBot: boolean}[]>([
-    { sender: "Ada (CEO)", text: "Hey! We are currently running the Salesforce migration. Nexus is struggling slightly with the Quote Line Logic translation, we might need human input on Rule #402. Want me to pause?", time: "Just now", isBot: true }
-  ]);
+  const [agents, setAgents] = useState(INIT_AGENTS);
+  const [logs, setLogs] = useState<{ id: number, time: string, agent: string, msg: string }[]>([]);
+  const [particles, setParticles] = useState<{ id: string, from: string, to: string, progress: number }[]>([]);
+  const [command, setCommand] = useState("");
+  const logRef = useRef<HTMLDivElement>(null);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!chatInput.trim()) return;
+  // Typewriter effect simulation loop
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAgents(prev => prev.map(a => {
+        const fullStr = a.scripts[a.scriptIdx];
+        if (a.charIdx < fullStr.length) {
+          return { ...a, charIdx: a.charIdx + 1 };
+        } else {
+          // Finished line, maybe send a log or a particle randomly
+          // Wait a bit, then move to next script
+          return { ...a, charIdx: 0, scriptIdx: (a.scriptIdx + 1) % a.scripts.length };
+        }
+      }));
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Emitting global logs & particles when lines finish
+  useEffect(() => {
+    agents.forEach(a => {
+      const fullStr = a.scripts[a.scriptIdx];
+      if (a.charIdx === fullStr.length && fullStr.length > 5) {
+        // Line finished typing!
+        const time = new Date().toLocaleTimeString([], { hour12: false });
+        setLogs(prev => [...prev, { id: Date.now() + Math.random(), time, agent: a.name, msg: fullStr }].slice(-50));
+        
+        // Randomly shoot a particle to someone else if this was a long action
+        if (Math.random() > 0.6) {
+          const targets = INIT_AGENTS.filter(t => t.id !== a.id);
+          const target = targets[Math.floor(Math.random() * targets.length)];
+          const newParticle = { id: `p-${Date.now()}`, from: a.id, to: target.id, progress: 0 };
+          setParticles(p => [...p, newParticle]);
+        }
+      }
+    });
+  }, [agents]);
+
+  // Particle animation loop
+  useEffect(() => {
+    const pInt = setInterval(() => {
+      setParticles(prev => prev.map(p => ({ ...p, progress: p.progress + 0.05 })).filter(p => p.progress <= 1));
+    }, 50);
+    return () => clearInterval(pInt);
+  }, []);
+
+  // Auto-scroll logs
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  const handleCommand = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!command.trim()) return;
+    const time = new Date().toLocaleTimeString([], { hour12: false });
+    setLogs(prev => [...prev, { id: Date.now(), time, agent: 'BOARD (YOU)', msg: command }]);
+    setCommand("");
+  };
+
+
+
+  const calculateParticlePosition = (fromId: string, toId: string, progress: number) => {
+    const from = INIT_AGENTS.find(a => a.id === fromId);
+    const to = INIT_AGENTS.find(a => a.id === toId);
+    if (!from || !to) return { display: 'none' };
+
+    // Hacky parse of percentage strings
+    const fx = parseFloat(from.qx); const fy = parseFloat(from.qy);
+    const tx = parseFloat(to.qx); const ty = parseFloat(to.qy);
     
-    setMessages(prev => [...prev, { 
-      sender: "You", 
-      text: chatInput, 
-      time: "Just now", 
-      isBot: false 
-    }]);
-    setChatInput("");
-
-    // Simulate agent reply
-    setTimeout(() => {
-      setMessages(prev => [...prev, { 
-        sender: "Nexus (Logic Agent)", 
-        text: "I received your feedback! Adjusting translation rule mechanism immediately. Resuming sprint.", 
-        time: "Just now", 
-        isBot: true 
-      }]);
-    }, 2000);
+    const currX = fx + (tx - fx) * progress;
+    const currY = fy + (ty - fy) * progress;
+    
+    return { left: `${currX}%`, top: `${currY}%` };
   };
 
   return (
     <div className="app-container">
       
-      {/* LEFT SIDEBAR */}
-      <div className="glass-panel sidebar">
-        <div className="logo-area">
-          <h1>
-            <Building2 style={{ color: '#3b82f6' }} />
-            The A Company
-          </h1>
+      {/* HEADER */}
+      <header className="top-bar">
+        <h1 style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '1px' }}>
+          <span style={{ color: '#38bdf8' }}>THE A COMPANY</span> / MIGRATION OS
+        </h1>
+        <div style={{ display: 'flex', gap: '20px', fontSize: '12px' }}>
+          <span>PROJECT: <strong>Salesforce CPQ &rarr; RCA</strong></span>
+          <span style={{ color: '#34d399' }}>● 24/7 ACTIVE SIMULATION</span>
         </div>
-        
-        <nav className="nav-menu">
-          <div className="text-xs font-semibold text-zinc-500 mb-4 uppercase tracking-wider">Dashboard</div>
-          <div className="nav-item active"><LayoutDashboard size={18} /> Mission Control</div>
-          <div className="nav-item"><Users size={18} /> Agent Roster</div>
-          <div className="nav-item"><Activity size={18} /> Budget & Pulse</div>
-          <div className="nav-item"><Settings size={18} /> Settings</div>
-        </nav>
-      </div>
+      </header>
 
-      {/* MIDDLE: MAIN OFFICE INTERACTIVE CANVAS */}
-      <div className="main-office">
-        
-        {/* Header Ribbon */}
-        <div className="glass-panel header-panel">
-          <div className="project-info">
-            <h2>{PROJECT.name}</h2>
-            <p>Active Client: {PROJECT.client} &middot; <span style={{color: 'var(--accent-blue)'}}>{PROJECT.status}</span></p>
-          </div>
-          <div className="progress-section">
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>{PROJECT.progress}%</span>
-            <div className="progress-bar-container">
-              <motion.div 
-                className="progress-fill"
-                initial={{ width: 0 }}
-                animate={{ width: `${PROJECT.progress}%` }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Office Rooms Grid */}
-        <div className="office-map glass-panel">
-          {ROOMS.map(room => {
-            const roomAgents = AGENTS.filter(a => a.room === room.id);
-            return (
-              <div key={room.id} className="room">
-                <div className="room-header">
-                  <div className="room-title flex items-center gap-2" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {room.icon}
-                    {room.title}
-                  </div>
+      {/* ISOMETRIC OFFICE SIMULATION */}
+      <div className="main-stage">
+        <div className="office-floor">
+          
+          {/* Render Physical Rooms */}
+          {ROOMS.map(r => (
+            <div key={r.id} className="room" style={{ left: r.x, top: r.y, width: r.w, height: r.h, position: 'absolute' }}>
+              <div className="room-details">
+                <div className="room-title">
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: r.color, boxShadow: `0 0 10px ${r.color}` }}></div>
+                  {r.name}
                 </div>
-                <div className="room-content">
-                  <AnimatePresence>
-                    {roomAgents.map(agent => (
-                      <AgentBadge key={agent.id} agent={agent} />
-                    ))}
-                  </AnimatePresence>
+                <div className="room-goal">{r.goal}</div>
+              </div>
+              <div className="room-status" style={{ color: r.color, borderColor: r.color }}>LIVE</div>
+            </div>
+          ))}
+
+          {/* Render Characters inside the coordinate plane */}
+          {agents.map(a => {
+            const currentText = a.scripts[a.scriptIdx].substring(0, a.charIdx);
+            const isTyping = a.charIdx < a.scripts[a.scriptIdx].length;
+
+            return (
+              <div key={a.id} className="agent-node" style={{ left: a.qx, top: a.qy }}>
+                {/* Deep Script Cloud */}
+                <div className="terminal-cloud">
+                  <strong style={{ color: '#fff' }}>{'>'} </strong> 
+                  {currentText}
+                  {isTyping && <span style={{ animation: 'blink 1s infinite' }}>_</span>}
+                </div>
+                
+                {/* Bot Character Model */}
+                <div className="bot-body">
+                  <div className="bot-eye"></div>
+                  {/* Bouncing tiny hands */}
+                  <div className={`bot-hand left ${!isTyping ? '' : 'typing'}`} style={{ animationPlayState: isTyping ? 'running' : 'paused' }}></div>
+                  <div className={`bot-hand right ${!isTyping ? '' : 'typing'}`} style={{ animationPlayState: isTyping ? 'running' : 'paused' }}></div>
+                </div>
+
+                <div className="agent-name-plate">
+                  <div className="agent-name">{a.name}</div>
+                  <div className="agent-role">{a.role}</div>
                 </div>
               </div>
             );
           })}
+
+          {/* Render Communication Particles */}
+          <div className="flow-canvas">
+             {particles.map(p => (
+               <div key={p.id} className="particle" style={calculateParticlePosition(p.from, p.to, p.progress)}></div>
+             ))}
+          </div>
         </div>
       </div>
 
-      {/* RIGHT: ACTIVITY & CHAT */}
-      <div className="side-panel">
+      {/* BOTTOM CONTROL PANEL */}
+      <div className="bottom-panel">
         
-        {/* Live Feed */}
-        <div className="glass-panel feed-section" style={{ height: '40%' }}>
-          <h3 className="section-title"><Activity size={18} style={{ color: '#60a5fa' }} /> Agent Feed</h3>
-          <div className="feed-list">
-            {FEED.map(item => (
-              <div key={item.id} className="feed-item">
-                <div className="feed-icon">{item.icon}</div>
-                <div className="feed-content" style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h4>{item.title} <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 4 }}>by {item.agent}</span></h4>
-                  </div>
-                  <p>{item.desc}</p>
-                  <div className="feed-meta">
-                    <span>{item.time}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="log-stream" ref={logRef}>
+          <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '2px' }}>Event Stream</div>
+          {logs.map(l => (
+            <div key={l.id} className="log-line">
+              <span className="log-time">[{l.time}]</span>
+              <span className="log-agent" style={{ color: l.agent === 'BOARD (YOU)' ? '#f59e0b' : '#38bdf8' }}>{l.agent}:</span>
+              <span className="log-msg" style={{ color: l.agent === 'BOARD (YOU)' ? '#fff' : '#e2e8f0' }}>{l.msg}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Live Chat */}
-        <div className="glass-panel chat-section" style={{ height: '60%' }}>
-          <h3 className="section-title"><MessageSquare size={18} style={{ color: '#c084fc' }} /> Intercom</h3>
-          
-          <div className="feed-list flex-1">
-            {messages.map((m, i) => (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                key={i} 
-                style={{
-                  marginBottom: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: m.isBot ? 'flex-start' : 'flex-end'
-                }}
-              >
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>{m.sender} &middot; {m.time}</div>
-                <div style={{
-                  background: m.isBot ? 'rgba(255,255,255,0.05)' : 'var(--accent-blue)',
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  borderTopLeftRadius: m.isBot ? '0px' : '12px',
-                  borderTopRightRadius: !m.isBot ? '0px' : '12px',
-                  fontSize: '13px',
-                  maxWidth: '85%',
-                  lineHeight: 1.5
-                }}>
-                  {m.text}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          <form onSubmit={handleSendMessage} className="chat-input-area">
-            <input 
-              type="text" 
-              className="chat-input" 
-              placeholder="Message the company..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-            />
-            <button type="submit" className="send-btn">
-              <Send size={18} />
-            </button>
+        <div className="command-center">
+          <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '2px' }}>Direct Communication (Intercom)</div>
+          <form onSubmit={handleCommand} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+             <textarea 
+               value={command} 
+               onChange={e => setCommand(e.target.value)}
+               placeholder="Issue a command to the company or ask for a status update..."
+               className="input-box"
+               style={{ flex: 1, resize: 'none', marginBottom: '12px' }}
+               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { handleCommand(e); } }}
+             />
+             <button type="submit" style={{ padding: '12px', background: '#38bdf8', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>
+               SEND DIRECTIVE
+             </button>
           </form>
         </div>
 
