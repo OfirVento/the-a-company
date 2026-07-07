@@ -27,15 +27,21 @@ Walk me through this plan, adapting it to what you find in my org:
 **Step 1 — Integration user (least privilege).**
 Check how many spare licenses I have. If possible, create (or repurpose) a dedicated
 integration user with a permission set granting: API Enabled, View Setup and Configuration,
-View Roles and Role Hierarchy, and **read-only** access (View All) on: Lead, Account,
-Contact, Opportunity, OpportunityLineItem, Quote, Order, Contract, Product2, Pricebook2,
-Campaign, CampaignMember, Task, Event, User, and any custom objects related to sales.
-Field history / OpportunityHistory read access included. If no spare license exists, tell me
-the trade-off of using my own user as the run-as user and let me decide.
+View Roles and Role Hierarchy, and **read-only** access (View All) on the quote-to-cash
+objects: Account, Contact, Opportunity, OpportunityLineItem, Quote, QuoteLineItem, Order,
+OrderItem, Contract, Asset, Product2, Pricebook2, PricebookEntry, User — **plus every
+object from our CPQ/billing packages** (whichever namespaces are installed, e.g. Salesforce
+CPQ `SBQQ__*` such as SBQQ__Quote__c, SBQQ__QuoteLine__c, SBQQ__Subscription__c,
+SBQQ__ProductRule__c, SBQQ__PriceRule__c; Advanced Approvals `SBAA__*`; Salesforce Billing
+`blng__*`; or the equivalent objects of a third-party CPQ like Conga/Apttus) and any custom
+objects related to quoting. Field history read access included. If reading those package
+objects requires a CPQ permission set license, assign it to the integration user. If no
+spare license exists, tell me the trade-off of using my own user as the run-as user and let
+me decide.
 
 **Step 2 — The OAuth app.**
 Create a Connected App or External Client App (whichever my org uses) named
-"Claude Code – Sales Process Discovery":
+"Claude Code – Quote-to-Cash Discovery":
 - Enable OAuth. Callback URL `https://login.salesforce.com/services/oauth2/callback`
   (required field but unused by this flow).
 - OAuth scope: "Manage user data via APIs (api)" only.

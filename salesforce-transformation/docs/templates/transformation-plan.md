@@ -1,28 +1,30 @@
-# Sales Process Transformation Plan (template)
+# Quote-to-Cash Transformation Plan (template)
 
 <!-- Built in Phase 3, only from the VALIDATED current-state overview. -->
 
 ## 1. Target process
-The redesigned funnel, side by side with today's. Fewer stages if the data showed unused
-ones; explicit entry/exit criteria per stage.
+The redesigned quote-to-cash flow, side by side with today's. Fewer statuses/handoffs if
+the data showed unused ones; explicit entry/exit criteria per step.
 
 ## 2. Step classification
 Every step from the current-state overview, classified:
 
 | Step | Today | Classification | How |
 |------|-------|----------------|-----|
-| e.g. Lead routing | Manual triage in queue | **Automate** | Record-triggered flow + assignment rules |
-| e.g. Lead qualification outreach | SDR writes emails | **Agent** | Agentforce SDR agent / external agent |
-| e.g. Discount approval | Email chain | **Automate** | Approval process + Slack notification |
-| e.g. Negotiation | AE-led | **Keep manual** | Better data at the rep's fingertips |
+| e.g. Quote configuration | Rep builds line-by-line | **Agent** | Quoting agent drafts from opp + catalog, rep reviews |
+| e.g. Discount approval routing | Email chain / manual | **Automate** | Approval rules + notifications, smart approvals on requote |
+| e.g. Renewal quote creation | Manual, often late | **Automate + Agent** | Auto-generate renewal quote; agent flags uplift/churn risk |
+| e.g. Order rekeying into ERP | Manual copy | **Automate** | Integration on order activation |
+| e.g. Final price negotiation | AE-led | **Keep manual** | Agent-prepared concession history at hand |
 
 Classification rules of thumb:
-- **Automate (Flow/config)** — deterministic: routing, field updates, notifications,
-  SLAs, approvals, data hygiene enforcement.
-- **Agent** — language or judgment work at volume: lead qualification and nurture,
-  meeting prep and account research, call/email summarization into CRM fields, quote
-  drafting, renewal/upsell monitoring, pipeline hygiene nudges.
-- **Keep manual** — relationship and negotiation moments where a human is the point.
+- **Automate (Flow/config/integration)** — deterministic: approval routing, quote-to-order
+  generation, renewal quote creation, status notifications, ERP handoff, hygiene
+  enforcement (expire stale drafts).
+- **Agent** — language or judgment work at volume: drafting quotes from deal context,
+  explaining pricing/approval rules to reps, quote review against past won deals,
+  discount-request triage, renewal/upsell monitoring, catalog Q&A.
+- **Keep manual** — negotiation and non-standard deal moments where a human is the point.
 
 ## 3. Agent platform decisions
 Per agent use case: **Agentforce** (native CRM data access, runs inside Salesforce UX,
