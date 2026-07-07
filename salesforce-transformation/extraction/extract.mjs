@@ -85,11 +85,15 @@ const CATALOG = [
   { name: 'record_types', kind: 'soql', q: "SELECT SobjectType, Name, DeveloperName, IsActive FROM RecordType WHERE SobjectType IN ('Opportunity','Quote','Order','Contract','SBQQ__Quote__c') ORDER BY SobjectType" },
   { name: 'opportunity_stages', kind: 'soql', q: 'SELECT MasterLabel, ApiName, SortOrder, DefaultProbability, ForecastCategoryName, IsActive, IsClosed, IsWon FROM OpportunityStage ORDER BY SortOrder' },
 
-  // A4 — approvals & gating rules
+  // A4 — approvals & gating rules (Advanced Approvals namespace is lowercase sbaa;
+  // config objects are low-volume, so FIELDS(ALL) avoids guessing field names)
   { name: 'approval_processes', kind: 'soql', q: 'SELECT Id, Name, DeveloperName, TableEnumOrId, State, Type, Description FROM ProcessDefinition' },
-  { name: 'sbaa_approval_rules', kind: 'soql', q: 'SELECT Id, Name, SBAA__Active__c, SBAA__TargetObject__c, SBAA__ApprovalStep__c, SBAA__ConditionsMet__c FROM SBAA__Rule__c' },
-  { name: 'sbaa_approval_chains', kind: 'soql', q: 'SELECT Id, Name, SBAA__TargetObject__c FROM SBAA__ApprovalChain__c' },
-  { name: 'validation_rules_q2c', kind: 'tooling', q: "SELECT ValidationName, Active, Description, ErrorMessage, EntityDefinition.DeveloperName FROM ValidationRule WHERE EntityDefinition.DeveloperName IN ('Opportunity','Quote','QuoteLineItem','Order','OrderItem','Contract','Asset','SBQQ__Quote__c','SBQQ__QuoteLine__c','SBQQ__Subscription__c','blng__Invoice__c')" },
+  { name: 'sbaa_approval_rules', kind: 'soql', q: 'SELECT FIELDS(ALL) FROM sbaa__ApprovalRule__c LIMIT 200' },
+  { name: 'sbaa_approval_chains', kind: 'soql', q: 'SELECT FIELDS(ALL) FROM sbaa__ApprovalChain__c LIMIT 200' },
+  { name: 'sbaa_approval_conditions', kind: 'soql', q: 'SELECT FIELDS(ALL) FROM sbaa__ApprovalCondition__c LIMIT 200' },
+  { name: 'sbaa_approval_steps', kind: 'soql', q: 'SELECT FIELDS(ALL) FROM sbaa__ApprovalStep__c LIMIT 200' },
+  { name: 'sbaa_approval_describe', kind: 'rest', path: `/services/data/${API}/sobjects/sbaa__Approval__c/describe` },
+  { name: 'validation_rules_q2c', kind: 'tooling', q: "SELECT ValidationName, Active, Description, ErrorMessage, EntityDefinition.QualifiedApiName FROM ValidationRule WHERE EntityDefinition.QualifiedApiName IN ('Opportunity','Quote','QuoteLineItem','Order','OrderItem','Contract','Asset','SBQQ__Quote__c','SBQQ__QuoteLine__c','SBQQ__Subscription__c','blng__Invoice__c')" },
 
   // A6 — automation inventory (flows/triggers filtered to Q2C objects during analysis)
   { name: 'flows', kind: 'tooling', q: 'SELECT ApiName, Label, ProcessType, TriggerType, TriggerObjectOrEventLabel, Description, IsActive FROM FlowDefinitionView ORDER BY ProcessType' },
@@ -114,7 +118,7 @@ const CATALOG = [
   { name: 'cpq_quote_history', kind: 'soql', q: `SELECT ParentId, Field, OldValue, NewValue, CreatedDate FROM SBQQ__Quote__History WHERE Field = 'SBQQ__Status__c' AND CreatedDate = ${LOOKBACK} ORDER BY ParentId, CreatedDate LIMIT 50000` },
 
   // B3 — approvals performance
-  { name: 'sbaa_approvals_raw', kind: 'soql', q: `SELECT Id, SBAA__Status__c, SBAA__RecordField__c, SBAA__Rule__c, SBAA__AssignedTo__r.Name, CreatedDate, SBAA__ApprovedBy__r.Name, LastModifiedDate FROM SBAA__Approval__c WHERE CreatedDate = ${LOOKBACK} ORDER BY CreatedDate LIMIT 20000` },
+  { name: 'sbaa_approvals_raw', kind: 'soql', q: `SELECT Id, Name, sbaa__Status__c, sbaa__AssignedTo__r.Name, sbaa__ApprovedBy__r.Name, CreatedDate, LastModifiedDate FROM sbaa__Approval__c WHERE CreatedDate = ${LOOKBACK} ORDER BY CreatedDate LIMIT 20000` },
   { name: 'std_approvals_raw', kind: 'soql', q: `SELECT Id, ProcessDefinition.Name, Status, CreatedDate, CompletedDate, TargetObjectId FROM ProcessInstance WHERE CreatedDate = ${LOOKBACK} ORDER BY CreatedDate LIMIT 20000` },
 
   // B5 — order → cash
@@ -125,6 +129,9 @@ const CATALOG = [
   { name: 'cpq_renewal_opps', kind: 'soql', q: `SELECT IsClosed, IsWon, COUNT(Id) n, SUM(Amount) amt FROM Opportunity WHERE SBQQ__Renewal__c = true AND CreatedDate = ${LOOKBACK} GROUP BY IsClosed, IsWon` },
   { name: 'cpq_amended_contracts', kind: 'soql', q: `SELECT COUNT(Id) n FROM Opportunity WHERE SBQQ__AmendedContract__c != null AND CreatedDate = ${LOOKBACK}` },
   { name: 'blng_invoices_by_month', kind: 'soql', q: `SELECT CALENDAR_YEAR(CreatedDate) y, CALENDAR_MONTH(CreatedDate) m, blng__InvoiceStatus__c, COUNT(Id) n FROM blng__Invoice__c WHERE CreatedDate = ${LOOKBACK} GROUP BY CALENDAR_YEAR(CreatedDate), CALENDAR_MONTH(CreatedDate), blng__InvoiceStatus__c` },
+  { name: 'blng_invoice_describe', kind: 'rest', path: `/services/data/${API}/sobjects/blng__Invoice__c/describe` },
+  { name: 'blng_credit_memos', kind: 'soql', q: `SELECT COUNT(Id) n FROM blng__CreditNote__c WHERE CreatedDate = ${LOOKBACK}` },
+  { name: 'sfbd_dunning_activity', kind: 'soql', q: 'SELECT COUNT(Id) n FROM SFBD__DunningActivity__c' },
 
   // B6 — hygiene
   { name: 'cpq_stale_draft_quotes', kind: 'soql', q: "SELECT COUNT(Id) n FROM SBQQ__Quote__c WHERE SBQQ__Status__c = 'Draft' AND CreatedDate < LAST_N_DAYS:30" },
