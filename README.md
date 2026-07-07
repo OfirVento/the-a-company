@@ -2,6 +2,33 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Live Avatar Lab (HeyGen LiveAvatar)
+
+Real-time voice + text chat with a HeyGen LiveAvatar, built on
+[`@heygen/liveavatar-web-sdk`](https://www.npmjs.com/package/@heygen/liveavatar-web-sdk)
+and the [LiveAvatar API](https://docs.liveavatar.com/).
+
+### Setup
+
+1. Get your API key from [app.liveavatar.com/developers](https://app.liveavatar.com/developers).
+2. Copy `.env.example` to `.env` and set `LIVEAVATAR_API_KEY`.
+3. `npm install && npm run dev`, then open the app and click **Live Avatar Lab**
+   (or go straight to `/#avatar-lab`).
+
+### How it works
+
+- `vite.config.ts` runs a tiny dev-server proxy (`/api/liveavatar/*`) that calls
+  `api.liveavatar.com` with your API key server-side — the key never reaches the browser.
+- The browser exchanges that for a short-lived session token
+  (`POST /v1/sessions/token`, FULL mode: HeyGen hosts the LLM + voice), then the
+  web SDK opens a WebRTC (LiveKit) connection to stream the avatar.
+- You can talk with the mic (toggle it on in the session controls), or type —
+  both sides of the conversation are transcribed live into the chat panel.
+- Pick any of your custom avatars or a public gallery avatar on the start screen.
+
+Note: FULL-mode sessions consume LiveAvatar credits per minute — end sessions
+with the hang-up button when you're done testing.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)

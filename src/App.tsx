@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
-import { 
-  Network, 
-  MessageSquare, 
+import {
+  Network,
+  MessageSquare,
   Database,
-  Workflow, 
-  Code2, 
-  CheckCircle2, 
+  Workflow,
+  Code2,
+  CheckCircle2,
   Target,
   MonitorPlay,
   Share2,
   FileJson,
   Blocks,
-  Cloud
+  Cloud,
+  ArrowLeft
 } from 'lucide-react';
+import LiveAvatarChat from './liveavatar/LiveAvatarChat';
 import './index.css';
 
 // --- DATA STRUCTURES ---
@@ -104,6 +106,18 @@ const FEED_MESSAGES = [
 ];
 
 export default function App() {
+  // Hash-based view switch: #avatar-lab opens the Live Avatar experience.
+  const [view, setView] = useState<'ops' | 'avatar-lab'>(
+    window.location.hash === '#avatar-lab' ? 'avatar-lab' : 'ops'
+  );
+
+  useEffect(() => {
+    const onHashChange = () =>
+      setView(window.location.hash === '#avatar-lab' ? 'avatar-lab' : 'ops');
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   const [taskIndices, setTaskIndices] = useState<Record<string, number>>({
     cyrus: 0, rosie: 0, nexus: 0, spark: 0, ada: 0
   });
@@ -159,9 +173,24 @@ export default function App() {
     return `M ${x1} ${y1} C ${x1} ${controlY}, ${x2} ${controlY}, ${x2} ${y2}`;
   };
 
+  if (view === 'avatar-lab') {
+    return (
+      <div className="app-wrapper">
+        <button className="view-switch" onClick={() => (window.location.hash = '')}>
+          <ArrowLeft size={14} /> Back to Ops
+        </button>
+        <LiveAvatarChat />
+      </div>
+    );
+  }
+
   return (
     <div className="app-wrapper">
-      
+
+      <button className="view-switch" onClick={() => (window.location.hash = 'avatar-lab')}>
+        <MonitorPlay size={14} /> Live Avatar Lab
+      </button>
+
       {/* Header */}
       <div className="top-header">
         <div className="header-text">
